@@ -156,16 +156,25 @@ const CONFIG = {
 
 ### 5b. Admin pagina (`js/admin.js`)
 
-Open `js/admin.js` en pas het CONFIG-object aan (regels 5-10):
+Open `js/admin.js` en pas het CONFIG-object aan (regels 5-11):
 
 ```javascript
 const CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/JOUW_DEPLOYMENT_ID/exec',
-  ADMIN_PASSWORD: 'jouwGeheimWachtwoord',
+  ADMIN_PASSWORD_HASH: 'jouw_sha256_hash',
 };
 ```
 
-> ⚠️ Het admin wachtwoord moet **exact hetzelfde** zijn als wat je hebt ingesteld in de Script Properties (stap 2c).
+**Hash genereren**: open je browser console (F12) en voer uit:
+
+```javascript
+crypto.subtle.digest('SHA-256', new TextEncoder().encode('jouwWachtwoord'))
+  .then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
+```
+
+Kopieer het resultaat en plak het als waarde van `ADMIN_PASSWORD_HASH`.
+
+> ⚠️ Het wachtwoord waarmee je de hash genereert moet **exact hetzelfde** zijn als de `ADMIN_PASSWORD` in de Script Properties (stap 2c). De hash staat veilig in de broncode — het wachtwoord zelf is niet te achterhalen.
 
 ### 5c. Push de wijzigingen
 
@@ -200,7 +209,7 @@ git push
 A: Controleer of je de web-app hebt gedeployed met "Wie heeft toegang: Iedereen". Na elke code-wijziging moet je een **nieuwe versie** deployen.
 
 **Q: De admin pagina laadt events maar er verschijnt niets.**
-A: Controleer of het admin wachtwoord in `js/admin.js` exact overeenkomt met de `ADMIN_PASSWORD` in Script Properties.
+A: Controleer of de `ADMIN_PASSWORD_HASH` in `js/admin.js` is gegenereerd met exact hetzelfde wachtwoord als de `ADMIN_PASSWORD` in Script Properties.
 
 **Q: Mollie betalingen komen niet door.**
 A: Controleer of de `checkMolliePayments` trigger actief is (stap 2e). Controleer ook of je de juiste API key gebruikt (test vs live).
