@@ -5,8 +5,9 @@
 const CONFIG = {
   // === VUL DEZE IN NA SETUP ===
   GAS_URL: 'JOUW_GOOGLE_APPS_SCRIPT_WEB_APP_URL',
-  // Admin wachtwoord (wordt ook server-side gecheckt in GAS)
-  ADMIN_PASSWORD: 'JOUW_ADMIN_WACHTWOORD',
+  // SHA-256 hash van je admin wachtwoord.
+  // Genereer via browser console: crypto.subtle.digest('SHA-256', new TextEncoder().encode('jouwWachtwoord')).then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
+  ADMIN_PASSWORD_HASH: 'VUL_HIER_JE_SHA256_HASH_IN',
 };
 
 const Admin = {
@@ -16,13 +17,24 @@ const Admin = {
 
   // ── Authentication ──────────────────────────
 
-  login(e) {
+  async hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  },
+
+  async login(e) {
     e.preventDefault();
     const pass = document.getElementById('login-pass').value;
     const errorEl = document.getElementById('login-error');
 
-    if (pass === CONFIG.ADMIN_PASSWORD) {
+    const hash = await this.hashPassword(pass);
+    if (hash === CONFIG.ADMIN_PASSWORD_HASH) {
       sessionStorage.setItem('admin', 'true');
+      sessionStorage.setItem('adminKey', pass);
       document.getElementById('view-login').classList.add('hidden');
       document.getElementById('admin-panel').classList.remove('hidden');
       this.loadEvents();
@@ -32,8 +44,12 @@ const Admin = {
     }
   },
 
+  getAdminKey() {
+    return sessionStorage.getItem('adminKey') || '';
+  },
+
   init() {
-    if (sessionStorage.getItem('admin') === 'true') {
+    if (sessionStorage.getItem('admin') === 'true' && sessionStorage.getItem('adminKey')) {
       document.getElementById('view-login').classList.add('hidden');
       document.getElementById('admin-panel').classList.remove('hidden');
       this.loadEvents();
@@ -45,7 +61,7 @@ const Admin = {
   async api(action, params = {}) {
     const url = new URL(CONFIG.GAS_URL);
     url.searchParams.set('action', action);
-    url.searchParams.set('adminKey', CONFIG.ADMIN_PASSWORD);
+    url.searchParams.set('adminKey', this.getAdminKey());
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
     const res = await fetch(url.toString());
@@ -59,7 +75,7 @@ const Admin = {
     const res = await fetch(CONFIG.GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action, adminKey: CONFIG.ADMIN_PASSWORD, ...body }),
+      body: JSON.stringify({ action, adminKey: this.getAdminKey(), ...body }),
     });
     if (!res.ok) throw new Error('Netwerkfout');
     const data = await res.json();
