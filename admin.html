@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Evenementen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Login Gate -->
+  <main id="view-login">
+    <div class="container" style="max-width:400px; padding-top:6rem;">
+      <h2>Admin</h2>
+      <p class="text-muted mb-3">Voer het admin wachtwoord in.</p>
+      <div id="login-error" class="message message-error hidden"></div>
+      <form onsubmit="Admin.login(event)">
+        <div class="form-group">
+          <label for="login-pass">Wachtwoord</label>
+          <input type="password" id="login-pass" required autofocus>
+        </div>
+        <button type="submit" class="btn">Inloggen</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Admin Panel -->
+  <div id="admin-panel" class="hidden">
+
+    <div class="admin-bar">
+      <div class="container">
+        <span>Admin paneel</span>
+        <a href="index.html" style="color:var(--gray-400);text-decoration:none;">Naar website &rarr;</a>
+      </div>
+    </div>
+
+    <header>
+      <div class="container">
+        <h1>Evenementen beheer</h1>
+        <nav>
+          <a href="#" onclick="Admin.showSection('events'); return false;">Events</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+
+        <!-- Message -->
+        <div id="admin-message" class="hidden"></div>
+
+        <!-- ═══ CREATE EVENT ═══ -->
+        <div class="admin-section">
+          <h3>Nieuw evenement</h3>
+          <form id="form-create-event" onsubmit="Admin.createEvent(event)">
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="ev-titel">Titel</label>
+                <input type="text" id="ev-titel" required>
+              </div>
+              <div class="form-group">
+                <label for="ev-locatie">Locatie</label>
+                <input type="text" id="ev-locatie">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="ev-beschrijving">Beschrijving</label>
+              <textarea id="ev-beschrijving"></textarea>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group checkbox-group">
+                <input type="checkbox" id="ev-betalend" onchange="document.getElementById('ev-prijs-wrap').classList.toggle('hidden', !this.checked)">
+                <label for="ev-betalend">Betalend evenement</label>
+              </div>
+              <div id="ev-prijs-wrap" class="form-group hidden">
+                <label for="ev-prijs">Prijs (€)</label>
+                <input type="number" id="ev-prijs" step="0.01" min="0">
+              </div>
+            </div>
+            <button type="submit" class="btn">Event aanmaken</button>
+          </form>
+        </div>
+
+        <!-- ═══ EVENTS LIST ═══ -->
+        <div class="admin-section">
+          <h3>Bestaande evenementen</h3>
+          <div id="admin-events-loading" class="loading-state">
+            <span class="loader"></span> Laden
+          </div>
+          <div id="admin-events-list"></div>
+        </div>
+
+        <!-- ═══ EVENT DETAIL (slots + inschrijvingen) ═══ -->
+        <div id="admin-event-detail" class="admin-section hidden">
+          <h3 id="admin-detail-title"></h3>
+
+          <!-- Add Slot -->
+          <h4 class="mt-3 mb-2">Tijdslot toevoegen</h4>
+          <form class="inline-form" onsubmit="Admin.addSlot(event)">
+            <input type="hidden" id="slot-event-id">
+            <div class="form-group">
+              <label for="slot-datum">Datum</label>
+              <input type="date" id="slot-datum" required>
+            </div>
+            <div class="form-group">
+              <label for="slot-start">Start</label>
+              <input type="time" id="slot-start" required>
+            </div>
+            <div class="form-group">
+              <label for="slot-eind">Einde</label>
+              <input type="time" id="slot-eind" required>
+            </div>
+            <div class="form-group">
+              <label for="slot-max">Max</label>
+              <input type="number" id="slot-max" min="1" value="10" required>
+            </div>
+            <button type="submit" class="btn btn-small">Toevoegen</button>
+          </form>
+
+          <!-- Slots Table -->
+          <h4 class="mt-3 mb-2">Tijdsloten</h4>
+          <table class="slot-list">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Tijd</th>
+                <th>Max</th>
+                <th>Ingeschreven</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="admin-slots-body"></tbody>
+          </table>
+
+          <!-- Registrations -->
+          <h4 class="mt-3 mb-2">Inschrijvingen</h4>
+          <div id="admin-registrations-loading" class="loading-state hidden">
+            <span class="loader"></span> Laden
+          </div>
+          <table class="slot-list">
+            <thead>
+              <tr>
+                <th>Naam</th>
+                <th>E-mail</th>
+                <th>Telefoon</th>
+                <th>Aantal</th>
+                <th>Tijdslot</th>
+                <th>Betaling</th>
+                <th>Datum</th>
+              </tr>
+            </thead>
+            <tbody id="admin-registrations-body"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 — Admin</p>
+    </div>
+  </footer>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
